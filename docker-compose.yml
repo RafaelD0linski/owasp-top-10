@@ -1,0 +1,46 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: owasp-scan-lab
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: file:/data/prod.db
+      AUTH_SECRET: ${AUTH_SECRET:-troque-este-segredo-em-producao}
+      DEMO_TARGET_URL: http://vulnerable-target:4000
+      # Host interno do compose + localhost (se expuser o alvo)
+      ALLOWED_SCAN_HOSTS: localhost,127.0.0.1,vulnerable-target
+    volumes:
+      - owasp_web_data:/data
+    depends_on:
+      - vulnerable-target
+    networks:
+      - owasp_net
+
+  # Alvo demo propositalmente inseguro — NÃO exponha na internet pública
+  vulnerable-target:
+    build:
+      context: .
+      dockerfile: apps/vulnerable-target/Dockerfile
+    container_name: owasp-vulnerable-target
+    restart: unless-stopped
+    expose:
+      - "4000"
+    # Descomente só em lab privado se quiser abrir no browser:
+    # ports:
+    #   - "4000:4000"
+    networks:
+      - owasp_net
+
+volumes:
+  owasp_web_data:
+
+networks:
+  owasp_net:
+    driver: bridge

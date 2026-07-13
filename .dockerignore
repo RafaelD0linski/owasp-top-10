@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log*
+.next
+dist
+.git
+.gitignore
+.env
+.env.local
+**/*.db
+**/*.db-journal
+apps/web/prisma/dev.db
+apps/web/prisma/dev.db-journal
+.cursor

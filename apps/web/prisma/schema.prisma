@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  targets      Target[]
+  scans        Scan[]
+}
+
+model Target {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url          String
+  label        String
+  isDemo       Boolean  @default(false)
+  authorizedAt DateTime
+  createdAt    DateTime @default(now())
+  scans        Scan[]
+}
+
+model Scan {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetId   String
+  target     Target      @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  status     String      @default("pending") // pending | running | completed | failed
+  modules    String      @default("[\"security\"]") // JSON array of module ids
+  score      Int?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime    @default(now())
+  findings   Finding[]
+  events     ScanEvent[]
+}
+
+model Finding {
+  id             String   @id @default(cuid())
+  scanId         String
+  scan           Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  owaspId        String
+  checkId        String
+  title          String
+  severity       String
+  status         String
+  evidence       String
+  risk           String   @default("")
+  recommendation String
+  createdAt      DateTime @default(now())
+}
+
+model ScanEvent {
+  id        String   @id @default(cuid())
+  scanId    String
+  scan      Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  type      String
+  checkId   String?
+  owaspId   String?
+  checkName String?
+  message   String?
+  payload   String?
+  createdAt DateTime @default(now())
+}

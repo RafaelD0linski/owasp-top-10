@@ -1,0 +1,16 @@
+{
+  "name": "owasp-top-10",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w web",
+    "dev:target": "npm run dev -w vulnerable-target",
+    "build": "npm run build -w @owasp/scanner-core && npm run build -w web",
+    "db:push": "npm run db:push -w web",
+    "db:seed": "npm run db:seed -w web"
+  }
+}
