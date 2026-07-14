@@ -4,13 +4,10 @@ set -e
 export DATABASE_URL="${DATABASE_URL:-file:/data/prod.db}"
 
 cd /app/apps/web
-# Garante schema no volume persistente
-if [ -x /app/node_modules/.bin/prisma ]; then
-  /app/node_modules/.bin/prisma db push --skip-generate --schema=./prisma/schema.prisma
-elif [ -x /app/apps/web/node_modules/.bin/prisma ]; then
-  /app/apps/web/node_modules/.bin/prisma db push --skip-generate --schema=./prisma/schema.prisma
-else
-  npx prisma db push --skip-generate --schema=./prisma/schema.prisma
+
+# Só toca o banco deste app (volume /data). Prisma 5.22 pinado.
+if command -v npx >/dev/null 2>&1; then
+  npx --yes prisma@5.22.0 db push --skip-generate --schema=./prisma/schema.prisma || true
 fi
 
 cd /app
