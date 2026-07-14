@@ -29,7 +29,9 @@ export async function createSession(userId: string) {
   jar.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Em HTTP (IP:porta) Secure=true faz o browser descartar o cookie.
+    // Ative COOKIE_SECURE=true apenas atrás de HTTPS.
+    secure: process.env.COOKIE_SECURE === "true",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
