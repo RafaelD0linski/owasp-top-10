@@ -17,11 +17,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:./dev.db"
-ENV NODE_ENV=development
 # Prisma 5.22 pinado via npx (evita Prisma 7 e não depende do .bin do lockfile)
 RUN npm run build -w @owasp/scanner-core \
   && npx --yes prisma@5.22.0 generate --schema=apps/web/prisma/schema.prisma \
-  && npm run build -w web
+  && NODE_ENV=production npm run build -w web
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
