@@ -7,6 +7,7 @@ COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/vulnerable-target/package.json ./apps/vulnerable-target/
 COPY packages/scanner-core/package.json ./packages/scanner-core/
+ENV NODE_ENV=development
 RUN npm ci
 
 FROM node:20-bookworm-slim AS builder
@@ -16,8 +17,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:./dev.db"
+ENV NODE_ENV=development
+# Prisma 5.22 pinado via npx (evita Prisma 7 e não depende do .bin do lockfile)
 RUN npm run build -w @owasp/scanner-core \
-  && npm run db:push -w web \
+  && npx --yes prisma@5.22.0 generate --schema=apps/web/prisma/schema.prisma \
   && npm run build -w web
 
 FROM node:20-bookworm-slim AS runner
@@ -36,7 +39,6 @@ COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/prisma ./apps/web/prisma
 COPY --from=builder /app/packages/scanner-core ./packages/scanner-core
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/pdfkit ./node_modules/pdfkit
 COPY --from=builder /app/node_modules/fontkit ./node_modules/fontkit
@@ -53,7 +55,6 @@ COPY --from=builder /app/node_modules/dfa ./node_modules/dfa
 COPY --from=builder /app/node_modules/restructure ./node_modules/restructure
 COPY --from=builder /app/node_modules/unicode-trie ./node_modules/unicode-trie
 
-# Garante resolução do workspace package no runtime
 RUN mkdir -p node_modules/@owasp \
   && ln -sfn /app/packages/scanner-core /app/node_modules/@owasp/scanner-core \
   && if [ -d /app/apps/web/node_modules ]; then \

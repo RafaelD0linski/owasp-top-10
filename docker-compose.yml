@@ -6,7 +6,8 @@ services:
     container_name: owasp-scan-lab
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Host:container — defina WEB_PORT no .env (ex.: 3080)
+      - "${WEB_PORT:-3080}:3000"
     environment:
       NODE_ENV: production
       PORT: "3000"
